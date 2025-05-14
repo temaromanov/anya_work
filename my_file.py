@@ -1,6 +1,7 @@
 
 import tkinter as tk
 from tkinter import messagebox
+from tkcalendar import DateEntry
 import pandas as pd
 import os
 
@@ -22,7 +23,10 @@ class ExcelEntryApp:
         for field in fields:
             label = tk.Label(root, text=field.replace("_", " "))
             label.pack()
-            entry = tk.Entry(root, width=70)
+            if "Дата" in field:
+                entry = DateEntry(root, width=67, date_pattern="dd.mm.yyyy")
+            else:
+                entry = tk.Entry(root, width=70)
             entry.pack()
             self.entries[field] = entry
 
