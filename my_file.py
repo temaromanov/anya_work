@@ -8,44 +8,85 @@ import os
 class ExcelEntryApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Добавление данных в Excel")
+        self.root.title("Форма заполнения реквизитов")
+        self.root.geometry("750x600")
         self.entries = {}
         self.excel_file = None
 
-        # Поля формы
-        fields = [
-            "Полное_название", "ФИО_родительный", "ФИО_сокращ", "полный_тип_объекта",
-            "Короткое_название", "Юридический_адрес", "Фактический_адрес", "ИНН", "ОГРН",
-            "КПП", "Банк", "Кор_счет", "БИК", "ОКПО", "Контактная_персона", "Номер", 
-            "Дата_аренды", "Дата"
-        ]
+        # Разбивка по вкладкам
+        notebook = ttk.Notebook(root)
+        notebook.pack(expand=True, fill='both', padx=10, pady=10)
 
+        self.frames = {
+            "Основное": ttk.Frame(notebook),
+            "Банк и документы": ttk.Frame(notebook),
+            "Даты и номер": ttk.Frame(notebook)
+        }
+
+        for name, frame in self.frames.items():
+            notebook.add(frame, text=name)
+
+        # Поля и опции
+        self.fields_main = [
+            "Полное_название", "ФИО_родительный", "ФИО_сокращ",
+            "полный_тип_объекта", "Короткое_название",
+            "Юридический_адрес", "Фактический_адрес"
+        ]
+        self.fields_bank = [
+            "ИНН", "ОГРН", "КПП", "Банк", "Кор_счет", "БИК", "ОКПО", "Контактная_персона"
+        ]
+        self.fields_date = [
+            "Номер", "Дата_аренды", "Дата"
+        ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Помощник", "Ответственный менеджер"]
 
-        for field in fields:
-            label = tk.Label(root, text=field.replace("_", " "))
-            label.pack()
+        # Поля на вкладках
+        for field in self.fields_main:
+            self.create_entry(self.frames["Основное"], field)
 
+        for field in self.fields_bank:
             if field == "Банк":
-                entry = ttk.Combobox(root, values=bank_options, width=67)
+                self.create_combobox(self.frames["Банк и документы"], field, bank_options)
             elif field == "Контактная_персона":
-                entry = ttk.Combobox(root, values=person_options, width=67)
-            elif "Дата" in field:
-                entry = DateEntry(root, width=67, date_pattern="dd.mm.yyyy")
+                self.create_combobox(self.frames["Банк и документы"], field, person_options)
             else:
-                entry = tk.Entry(root, width=70)
+                self.create_entry(self.frames["Банк и документы"], field)
 
-            entry.pack()
-            self.entries[field] = entry
+        for field in self.fields_date:
+            if "Дата" in field:
+                self.create_dateentry(self.frames["Даты и номер"], field)
+            else:
+                self.create_entry(self.frames["Даты и номер"], field)
 
-        # Кнопки управления
-        btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=10)
+        # Кнопки
+        button_frame = ttk.Frame(root)
+        button_frame.pack(pady=10)
 
-        tk.Button(btn_frame, text="📂 Выбрать Excel-файл", command=self.choose_file).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="✅ Добавить запись", command=self.save_to_excel, bg="lightgreen").pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="📂 Выбрать Excel-файл", command=self.choose_file).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="✅ Добавить запись", command=self.save_to_excel).pack(side=tk.LEFT, padx=5)
+
+    def create_entry(self, parent, field):
+        label = ttk.Label(parent, text=field.replace("_", " "))
+        label.pack(anchor='w', padx=10)
+        entry = ttk.Entry(parent, width=85)
+        entry.pack(padx=10, pady=3)
+        self.entries[field] = entry
+
+    def create_combobox(self, parent, field, options):
+        label = ttk.Label(parent, text=field.replace("_", " "))
+        label.pack(anchor='w', padx=10)
+        combo = ttk.Combobox(parent, values=options, width=83)
+        combo.pack(padx=10, pady=3)
+        self.entries[field] = combo
+
+    def create_dateentry(self, parent, field):
+        label = ttk.Label(parent, text=field.replace("_", " "))
+        label.pack(anchor='w', padx=10)
+        date_entry = DateEntry(parent, width=83, date_pattern="dd.mm.yyyy")
+        date_entry.pack(padx=10, pady=3)
+        self.entries[field] = date_entry
 
     def choose_file(self):
         path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
