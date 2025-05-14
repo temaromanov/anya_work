@@ -1,6 +1,6 @@
 
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 import pandas as pd
 import os
@@ -14,6 +14,9 @@ fields = [
     "Дата_аренды", "Дата"
 ]
 
+bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
+person_options = ["Генеральный директор", "Помощник", "Ответственный менеджер"]
+
 class ExcelEntryApp:
     def __init__(self, root):
         self.root = root
@@ -23,10 +26,16 @@ class ExcelEntryApp:
         for field in fields:
             label = tk.Label(root, text=field.replace("_", " "))
             label.pack()
-            if "Дата" in field:
+
+            if field == "Банк":
+                entry = ttk.Combobox(root, values=bank_options, width=67)
+            elif field == "Контактная_персона":
+                entry = ttk.Combobox(root, values=person_options, width=67)
+            elif "Дата" in field:
                 entry = DateEntry(root, width=67, date_pattern="dd.mm.yyyy")
             else:
                 entry = tk.Entry(root, width=70)
+
             entry.pack()
             self.entries[field] = entry
 
