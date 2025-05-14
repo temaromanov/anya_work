@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox, filedialog
 from tkcalendar import DateEntry
 import pandas as pd
 import os
+from docx import Document
 
 class ExcelEntryApp:
     def __init__(self, root):
@@ -12,8 +13,9 @@ class ExcelEntryApp:
         self.root.geometry("750x600")
         self.entries = {}
         self.excel_file = None
+        self.word_template = "Шаблон_договора.docx"
 
-        # Разбивка по вкладкам
+        # Вкладки
         notebook = ttk.Notebook(root)
         notebook.pack(expand=True, fill='both', padx=10, pady=10)
 
@@ -26,7 +28,6 @@ class ExcelEntryApp:
         for name, frame in self.frames.items():
             notebook.add(frame, text=name)
 
-        # Поля и опции
         self.fields_main = [
             "Полное_название", "ФИО_родительный", "ФИО_сокращ",
             "полный_тип_объекта", "Короткое_название",
@@ -41,7 +42,6 @@ class ExcelEntryApp:
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Помощник", "Ответственный менеджер"]
 
-        # Поля на вкладках
         for field in self.fields_main:
             self.create_entry(self.frames["Основное"], field)
 
@@ -59,13 +59,12 @@ class ExcelEntryApp:
             else:
                 self.create_entry(self.frames["Даты и номер"], field)
 
-        # Кнопки
         button_frame = ttk.Frame(root)
         button_frame.pack(pady=10)
 
         ttk.Button(button_frame, text="📂 Выбрать Excel-файл", command=self.choose_file).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="✅ Добавить запись", command=self.save_to_excel).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="✅ Добавить и создать Word", command=self.save_and_generate_word).pack(side=tk.LEFT, padx=5)
 
     def create_entry(self, parent, field):
         label = ttk.Label(parent, text=field.replace("_", " "))
@@ -92,15 +91,13 @@ class ExcelEntryApp:
         path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
         if path:
             self.excel_file = path
-            messagebox.showinfo("Файл выбран", f"Текущий файл:{self.excel_file}")
 
     def save_as(self):
         path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
         if path:
             self.excel_file = path
-            messagebox.showinfo("Файл сохранения выбран", f"Будет сохранено в:{self.excel_file}")
 
-    def save_to_excel(self):
+    def save_and_generate_word(self):
         if not self.excel_file:
             messagebox.showwarning("Файл не выбран", "Пожалуйста, выберите или создайте Excel-файл перед сохранением.")
             return
@@ -118,8 +115,17 @@ class ExcelEntryApp:
             df = new_row
 
         df.to_excel(self.excel_file, index=False)
-        os.startfile(self.excel_file)
-        messagebox.showinfo("Готово", f"Данные добавлены в файл:{self.excel_file}")
+
+        if os.path.exists(self.word_template):
+            doc = Document(self.word_template)
+            for p in doc.paragraphs:
+                for key, val in new_data.items():
+                    if f"{{{{{key}}}}}" in p.text:
+                        p.text = p.text.replace(f"{{{{{key}}}}}", val)
+
+            word_output = self.excel_file.replace(".xlsx", "_документ.docx")
+            doc.save(word_output)
+            os.startfile(word_output)
 
         for entry in self.entries.values():
             entry.delete(0, tk.END)
