@@ -1,0 +1,5 @@
+*.xlsx
+README.md
+.pyc
+__pycache__
+*.docx
