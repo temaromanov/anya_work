@@ -1,4 +1,6 @@
 *.xlsx
 README.md
-.pyc
+*.pyc
 *.docx
+.venv/
+__pycache__/

@@ -4,6 +4,25 @@ from tkcalendar import DateEntry
 import pandas as pd
 import os
 from docx import Document
+import pymorphy3
+
+morph = pymorphy3.MorphAnalyzer()
+
+def fio_to_rod_and_short(fio_nominative):
+    """
+    Преобразует ФИО из именительного падежа в родительный + сокращает
+    """
+    parts = fio_nominative.strip().split()
+    if len(parts) < 3:
+        # если не ввели полностью, то возвращаем как есть
+        return fio_nominative, fio_nominative
+    fam, name, otch = parts
+    fam_rod = morph.parse(fam)[0].inflect({'gent'}).word.title()
+    name_rod = morph.parse(name)[0].inflect({'gent'}).word.title()
+    otch_rod = morph.parse(otch)[0].inflect({'gent'}).word.title()
+    fio_rod = f"{fam_rod} {name_rod} {otch_rod}"
+    fio_short = f"{fam} {name[0]}.{otch[0]}."
+    return fio_rod, fio_short
 
 class ExcelEntryAppOOO:
     def __init__(self, root):
@@ -12,7 +31,7 @@ class ExcelEntryAppOOO:
         self.root.geometry("760x640")
         self.entries = {}
         self.excel_file = None
-        self.word_template = "Шаблон_аренда_договора.docx"
+        self.word_template = "Шаблон_аренда_договора_ооо.docx"
 
         style = ttk.Style()
         style.configure("TNotebook.Tab", font=("Segoe UI", 10, "bold"))
@@ -31,8 +50,9 @@ class ExcelEntryAppOOO:
         for name, frame in self.frames.items():
             notebook.add(frame, text=name)
 
+        # Теперь только одна строка для ФИО
         self.fields_main = [
-            "Название_организации", "Полное_имя_родительское_число", "Сокрщ_имя_дир",
+            "ФИО_им",  # ← только одна строка ФИО!
             "ООО_или_ИП", "в_лице",
             "Юридический_адрес", "Фактический_адрес", "номер_договора",
         ]
@@ -46,7 +66,10 @@ class ExcelEntryAppOOO:
         person_options = ["Генеральный директор", "Помощник", "Ответственный менеджер"]
 
         for field in self.fields_main:
-            self.create_row(self.frames["Основное"], field)
+            if field == "ФИО_им":
+                self.create_row(self.frames["Основное"], field, "ФИО (Именительный падеж, например: Иванов Иван Иванович)")
+            else:
+                self.create_row(self.frames["Основное"], field)
 
         for field in self.fields_bank:
             if field == "Банк":
@@ -69,12 +92,12 @@ class ExcelEntryAppOOO:
         ttk.Button(button_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=8)
         ttk.Button(button_frame, text="✅ Добавить и создать Word", command=self.save_and_generate_word).pack(side=tk.LEFT, padx=8)
 
-    def create_row(self, parent, field):
+    def create_row(self, parent, field, label_text=None):
         frame = ttk.Frame(parent)
         frame.pack(fill='x', pady=3)
-        label = ttk.Label(frame, text=field.replace("_", " "), width=25, anchor='w')
+        label = ttk.Label(frame, text=label_text or field.replace("_", " "), width=40, anchor='w')
         label.pack(side='left')
-        entry = ttk.Entry(frame, width=65)
+        entry = ttk.Entry(frame, width=55)
         entry.pack(side='left', padx=5)
         self.entries[field] = entry
 
@@ -111,7 +134,15 @@ class ExcelEntryAppOOO:
             messagebox.showwarning("Файл не выбран", "Пожалуйста, выберите или создайте Excel-файл перед сохранением.")
             return
 
+        # Получаем значение ФИО
+        fio_input = self.entries["ФИО_им"].get()
+        fio_rod, fio_short = fio_to_rod_and_short(fio_input)
+
         new_data = {k: v.get() for k, v in self.entries.items()}
+        # Добавляем авто-вычисленные поля
+        new_data["Полное_имя_род_падеж"] = fio_rod
+        new_data["Сокрщ_имя_дир"] = fio_short
+
         new_row = pd.DataFrame([new_data])
 
         if os.path.exists(self.excel_file):
@@ -152,3 +183,4 @@ class ExcelEntryAppOOO:
 
         for entry in self.entries.values():
             entry.delete(0, tk.END)
+
