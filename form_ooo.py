@@ -182,7 +182,10 @@ class ExcelEntryAppOOO:
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
 
+        # Обработка суммы — теперь надёжно
         summa_str = new_data.get("Сумма_арендной_платы", "0").replace(",", ".")
+        if summa_str.strip() == "":
+            summa_str = "0"
         try:
             summa_float = float(summa_str)
         except Exception:
@@ -193,11 +196,11 @@ class ExcelEntryAppOOO:
             rub, kop = rub, "00"
         else:
             kop = (kop + "00")[:2]
-        new_data["Сумма_арендной_платы_руб"] = rub
-        new_data["Сумма_арендной_платы_коп"] = kop
-        new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub)
+        new_data["Сумма_арендной_платы_руб"] = rub if rub else "0"
+        new_data["Сумма_арендной_платы_коп"] = kop if kop else "00"
+        new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub if rub else "0")
 
-        nds = round(summa_float * 5 / 105, 2)
+        nds = round(summa_float * 5 / 105, 2) if summa_float else 0
         new_data["НДС"] = f"{nds:.2f}"
 
         new_row = pd.DataFrame([new_data])
@@ -228,7 +231,3 @@ class ExcelEntryAppOOO:
         for entry in self.entries.values():
             entry.delete(0, tk.END)
         self.update_nds()
-
-
-
-
