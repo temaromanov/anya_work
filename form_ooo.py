@@ -5,6 +5,7 @@ import pandas as pd
 import os
 from docx import Document
 import pymorphy3
+from num2words import num2words
 
 morph = pymorphy3.MorphAnalyzer()
 
@@ -19,6 +20,12 @@ def fio_to_rod_and_short(fio_nominative):
     fio_rod = f"{fam_rod} {name_rod} {otch_rod}"
     fio_short = f"{fam} {name[0]}.{otch[0]}."
     return fio_rod, fio_short
+
+def rub_to_words(rub, kop):
+    rub = int(rub)
+    rub_text = num2words(rub, lang="ru")
+    # Можно доработать склонения при необходимости
+    return f"({rub_text.capitalize()})"
 
 class ExcelEntryAppOOO:
     def __init__(self, root):
@@ -50,19 +57,18 @@ class ExcelEntryAppOOO:
             "ФИО_им",
             "Должность",
             "Юридический_адрес", "Фактический_адрес", "Номер_договора",
-            "Мероприятие", "Сумма_арендной_платы"
+            "Название_организации", "Мероприятие", "Сумма_арендной_платы"
         ]
         self.fields_bank = [
             "ИНН", "КПП", "ОКПО", "ОГРН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
-            "Дата_начала_аренды", "Дата_конца_аренды", "Дата"
+            "Дата_аренды", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Президент", "Директор"]
 
-        # --- КОРОТКАЯ ЛОГИКА: поля, где нужно обновлять НДС ---
-        self.nds_label = None  # Сюда будет лейбл с суммой НДС
+        self.nds_label = None
 
         for field in self.fields_main:
             if field == "ФИО_им":
@@ -71,10 +77,8 @@ class ExcelEntryAppOOO:
                 self.create_combobox(self.frames["Основное"], field, person_options)
             elif field == "Сумма_арендной_платы":
                 self.create_row(self.frames["Основное"], field)
-                # после поля суммы добавляем Label для НДС
                 self.nds_label = ttk.Label(self.frames["Основное"], text="НДС (5%): 0.00", font=("Segoe UI", 10, "bold"), foreground="#225500")
                 self.nds_label.pack(anchor="w", padx=10, pady=2)
-                # вешаем событие на изменение суммы
                 self.entries[field].bind("<KeyRelease>", self.update_nds)
             else:
                 self.create_row(self.frames["Основное"], field)
@@ -88,7 +92,7 @@ class ExcelEntryAppOOO:
                 self.create_row(self.frames["Банк и документы"], field)
 
         for field in self.fields_date:
-            if "Дата" or "Дата_начала_аренды" in field:
+            if "Дата" in field:
                 self.create_dateentry(self.frames["Даты и номер"], field)
             else:
                 self.create_row(self.frames["Даты и номер"], field)
@@ -138,7 +142,6 @@ class ExcelEntryAppOOO:
             self.excel_file = path
 
     def update_nds(self, event=None):
-        """Автоматически пересчитывает и показывает НДС по мере ввода суммы аренды"""
         try:
             summa = float(self.entries["Сумма_арендной_платы"].get().replace(",", "."))
             nds = round(summa * 5 / 105, 2)
@@ -151,7 +154,6 @@ class ExcelEntryAppOOO:
             messagebox.showwarning("Файл не выбран", "Пожалуйста, выберите или создайте Excel-файл перед сохранением.")
             return
 
-        # Получаем значение ФИО
         fio_input = self.entries["ФИО_им"].get()
         fio_rod, fio_short = fio_to_rod_and_short(fio_input)
 
@@ -171,17 +173,14 @@ class ExcelEntryAppOOO:
             rub, kop = rub, "00"
         else:
             kop = (kop + "00")[:2]
-
         new_data["Сумма_арендной_платы_руб"] = rub
         new_data["Сумма_арендной_платы_коп"] = kop
 
+        # --- Переводим сумму в пропись ---
+        new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub, kop)
 
-        # --- РАССЧИТЫВАЕМ НДС автоматически ---
-        try:
-            summa = float(new_data.get("Сумма_арендной_платы", "0").replace(",", "."))
-        except Exception:
-            summa = 0
-        nds = round(summa * 5 / 105, 2)
+        # --- РАССЧИТЫВАЕМ НДС (выделяем из суммы) ---
+        nds = round(summa_float * 5 / 105, 2)
         new_data["НДС"] = f"{nds:.2f}"
 
         new_row = pd.DataFrame([new_data])
@@ -222,7 +221,7 @@ class ExcelEntryAppOOO:
 
         for entry in self.entries.values():
             entry.delete(0, tk.END)
-        # Обновить НДС внизу после очистки
         self.update_nds()
+
 
 
