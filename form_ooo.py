@@ -9,12 +9,8 @@ import pymorphy3
 morph = pymorphy3.MorphAnalyzer()
 
 def fio_to_rod_and_short(fio_nominative):
-    """
-    Преобразует ФИО из именительного падежа в родительный + сокращает
-    """
     parts = fio_nominative.strip().split()
     if len(parts) < 3:
-        # если не ввели полностью, то возвращаем как есть
         return fio_nominative, fio_nominative
     fam, name, otch = parts
     fam_rod = morph.parse(fam)[0].inflect({'gent'}).word.title()
@@ -31,7 +27,7 @@ class ExcelEntryAppOOO:
         self.root.geometry("760x640")
         self.entries = {}
         self.excel_file = None
-        self.word_template = "Шаблон_аренда_договора_ооо.docx"
+        self.word_template = "Шаблон_аренда_договор_ооо.docx"
 
         style = ttk.Style()
         style.configure("TNotebook.Tab", font=("Segoe UI", 10, "bold"))
@@ -50,24 +46,36 @@ class ExcelEntryAppOOO:
         for name, frame in self.frames.items():
             notebook.add(frame, text=name)
 
-        # Теперь только одна строка для ФИО
         self.fields_main = [
-            "ФИО_им",  # ← только одна строка ФИО!
-            "ООО_или_ИП", "в_лице",
-            "Юридический_адрес", "Фактический_адрес", "номер_договора",
+            "ФИО_им",
+            "Должность",
+            "Юридический_адрес", "Фактический_адрес", "Номер_договора",
+            "Мероприятие", "Сумма_арендной_платы"
         ]
         self.fields_bank = [
-            "ИНН", "ОГРН", "КПП", "Банк", "к_счет", "БИК", "ОКПО", "Расч_счет"
+            "ИНН", "КПП", "ОКПО", "ОГРН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
             "Дата_аренды", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
-        person_options = ["Генеральный директор", "Помощник", "Ответственный менеджер"]
+        person_options = ["Генеральный директор", "Президент", "Директор"]
+
+        # --- КОРОТКАЯ ЛОГИКА: поля, где нужно обновлять НДС ---
+        self.nds_label = None  # Сюда будет лейбл с суммой НДС
 
         for field in self.fields_main:
             if field == "ФИО_им":
-                self.create_row(self.frames["Основное"], field, "ФИО (Именительный падеж, например: Иванов Иван Иванович)")
+                self.create_row(self.frames["Основное"], field, "ФИО")
+            elif field == "Должность":
+                self.create_combobox(self.frames["Основное"], field, person_options)
+            elif field == "Сумма_арендной_платы":
+                self.create_row(self.frames["Основное"], field)
+                # после поля суммы добавляем Label для НДС
+                self.nds_label = ttk.Label(self.frames["Основное"], text="НДС (5%): 0.00", font=("Segoe UI", 10, "bold"), foreground="#225500")
+                self.nds_label.pack(anchor="w", padx=10, pady=2)
+                # вешаем событие на изменение суммы
+                self.entries[field].bind("<KeyRelease>", self.update_nds)
             else:
                 self.create_row(self.frames["Основное"], field)
 
@@ -129,6 +137,15 @@ class ExcelEntryAppOOO:
         if path:
             self.excel_file = path
 
+    def update_nds(self, event=None):
+        """Автоматически пересчитывает и показывает НДС по мере ввода суммы аренды"""
+        try:
+            summa = float(self.entries["Сумма_арендной_платы"].get().replace(",", "."))
+            nds = round(summa * 5 / 105, 2)
+            self.nds_label.config(text=f"НДС (5%): {nds:.2f}")
+        except Exception:
+            self.nds_label.config(text="НДС (5%): 0.00")
+
     def save_and_generate_word(self):
         if not self.excel_file:
             messagebox.showwarning("Файл не выбран", "Пожалуйста, выберите или создайте Excel-файл перед сохранением.")
@@ -139,9 +156,16 @@ class ExcelEntryAppOOO:
         fio_rod, fio_short = fio_to_rod_and_short(fio_input)
 
         new_data = {k: v.get() for k, v in self.entries.items()}
-        # Добавляем авто-вычисленные поля
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
+
+        # --- РАССЧИТЫВАЕМ НДС автоматически ---
+        try:
+            summa = float(new_data.get("Сумма_арендной_платы", "0").replace(",", "."))
+        except Exception:
+            summa = 0
+        nds = round(summa * 5 / 105, 2)
+        new_data["НДС"] = f"{nds:.2f}"
 
         new_row = pd.DataFrame([new_data])
 
@@ -162,13 +186,11 @@ class ExcelEntryAppOOO:
 
         if os.path.exists(self.word_template):
             doc = Document(self.word_template)
-            # Замена в параграфах
             for p in doc.paragraphs:
                 for run in p.runs:
                     for key, val in new_data.items():
                         if f"{{{{{key}}}}}" in run.text:
                             run.text = run.text.replace(f"{{{{{key}}}}}", val)
-            # Замена в таблицах
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
@@ -183,4 +205,7 @@ class ExcelEntryAppOOO:
 
         for entry in self.entries.values():
             entry.delete(0, tk.END)
+        # Обновить НДС внизу после очистки
+        self.update_nds()
+
 

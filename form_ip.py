@@ -12,7 +12,7 @@ class ExcelEntryAppIP:
         self.root.geometry("760x500")
         self.entries = {}
         self.excel_file = None
-        self.word_template = "Шаблон_аренда_договора_ип.docx"  # Можешь поменять под ИП
+        self.word_template = "Шаблон_аренда_договор_ИП.docx"  # Можешь поменять под ИП
 
         style = ttk.Style()
         style.configure("TNotebook.Tab", font=("Segoe UI", 10, "bold"))
