@@ -6,6 +6,7 @@ import os
 from docx import Document
 import pymorphy3
 from num2words import num2words
+from datetime import datetime
 
 morph = pymorphy3.MorphAnalyzer()
 
@@ -26,7 +27,17 @@ def rub_to_words(rub):
     rub_text = num2words(rub, lang="ru")
     return f"({rub_text})"
 
-# ---------- Универсальная функция замены по всему документу -------------
+def format_date_verbose(date_str):
+    months = [
+        '', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ]
+    try:
+        dt = datetime.strptime(date_str, "%d.%m.%Y")
+        return f"«{dt.day:02d}» {months[dt.month]} {dt.year} г."
+    except Exception:
+        return date_str
+
 def replace_variables_in_doc(doc, replacements):
     for paragraph in doc.paragraphs:
         inline_replace_in_runs(paragraph.runs, replacements)
@@ -40,14 +51,12 @@ def inline_replace_in_runs(runs, replacements):
     full_text = "".join([run.text for run in runs])
     for key, value in replacements.items():
         full_text = full_text.replace(f"{{{{{key}}}}}", str(value))
-    # Нарезаем обратно по длинам runs:
     idx = 0
     for run in runs:
         run_len = len(run.text)
         run.text = full_text[idx:idx+run_len]
         idx += run_len
 
-# ---------------------- Основной класс ----------------------------------
 class ExcelEntryAppOOO:
     def __init__(self, root):
         self.root = root
@@ -182,7 +191,6 @@ class ExcelEntryAppOOO:
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
 
-        # Обработка суммы — теперь надёжно
         summa_str = new_data.get("Сумма_арендной_платы", "0").replace(",", ".")
         if summa_str.strip() == "":
             summa_str = "0"
@@ -202,6 +210,13 @@ class ExcelEntryAppOOO:
 
         nds = round(summa_float * 5 / 105, 2) if summa_float else 0
         new_data["НДС"] = f"{nds:.2f}"
+
+        # --- ДАТА ПРОПИСЬЮ ---
+        date_str = new_data.get("Дата", "")
+        if date_str:
+            new_data["Дата_прописью"] = format_date_verbose(date_str)
+        else:
+            new_data["Дата_прописью"] = ""
 
         new_row = pd.DataFrame([new_data])
 
@@ -231,3 +246,4 @@ class ExcelEntryAppOOO:
         for entry in self.entries.values():
             entry.delete(0, tk.END)
         self.update_nds()
+
