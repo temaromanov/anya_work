@@ -56,7 +56,7 @@ class ExcelEntryAppOOO:
             "ИНН", "КПП", "ОКПО", "ОГРН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
-            "Дата_аренды", "Дата"
+            "Дата_начала_аренды", "Дата_конца_аренды", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Президент", "Директор"]
@@ -88,7 +88,7 @@ class ExcelEntryAppOOO:
                 self.create_row(self.frames["Банк и документы"], field)
 
         for field in self.fields_date:
-            if "Дата" in field:
+            if "Дата" or "Дата_начала_аренды" in field:
                 self.create_dateentry(self.frames["Даты и номер"], field)
             else:
                 self.create_row(self.frames["Даты и номер"], field)
@@ -158,6 +158,23 @@ class ExcelEntryAppOOO:
         new_data = {k: v.get() for k, v in self.entries.items()}
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
+
+        summa_str = new_data.get("Сумма_арендной_платы", "0").replace(",", ".")
+        try:
+            summa_float = float(summa_str)
+        except Exception:
+            summa_float = 0
+
+        # --- Разделяем на рубли и копейки ---
+        rub, sep, kop = summa_str.partition(".")
+        if not sep:
+            rub, kop = rub, "00"
+        else:
+            kop = (kop + "00")[:2]
+
+        new_data["Сумма_арендной_платы_руб"] = rub
+        new_data["Сумма_арендной_платы_коп"] = kop
+
 
         # --- РАССЧИТЫВАЕМ НДС автоматически ---
         try:
