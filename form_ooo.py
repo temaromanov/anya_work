@@ -23,10 +23,33 @@ def fio_to_rod_and_short(fio_nominative):
 
 def rub_to_words(rub, kop):
     rub = int(rub)
+    kop = int(kop)
     rub_text = num2words(rub, lang="ru")
-    # Можно доработать склонения при необходимости
-    return f"({rub_text.capitalize()})"
+    kop_text = num2words(kop, lang="ru")
+    return f"{rub_text.capitalize()} рублей {kop_text} копеек"
 
+# ---------- Универсальная функция замены по всему документу -------------
+def replace_variables_in_doc(doc, replacements):
+    for paragraph in doc.paragraphs:
+        inline_replace_in_runs(paragraph.runs, replacements)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    inline_replace_in_runs(paragraph.runs, replacements)
+
+def inline_replace_in_runs(runs, replacements):
+    full_text = "".join([run.text for run in runs])
+    for key, value in replacements.items():
+        full_text = full_text.replace(f"{{{{{key}}}}}", str(value))
+    # Нарезаем обратно по длинам runs:
+    idx = 0
+    for run in runs:
+        run_len = len(run.text)
+        run.text = full_text[idx:idx+run_len]
+        idx += run_len
+
+# ---------------------- Основной класс ----------------------------------
 class ExcelEntryAppOOO:
     def __init__(self, root):
         self.root = root
@@ -63,7 +86,7 @@ class ExcelEntryAppOOO:
             "ИНН", "КПП", "ОКПО", "ОГРН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
-            "Дата_аренды", "Дата"
+            "Дата_начала_аренды", "Дата_окончания_аренды", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Президент", "Директор"]
@@ -167,7 +190,6 @@ class ExcelEntryAppOOO:
         except Exception:
             summa_float = 0
 
-        # --- Разделяем на рубли и копейки ---
         rub, sep, kop = summa_str.partition(".")
         if not sep:
             rub, kop = rub, "00"
@@ -175,11 +197,8 @@ class ExcelEntryAppOOO:
             kop = (kop + "00")[:2]
         new_data["Сумма_арендной_платы_руб"] = rub
         new_data["Сумма_арендной_платы_коп"] = kop
-
-        # --- Переводим сумму в пропись ---
         new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub, kop)
 
-        # --- РАССЧИТЫВАЕМ НДС (выделяем из суммы) ---
         nds = round(summa_float * 5 / 105, 2)
         new_data["НДС"] = f"{nds:.2f}"
 
@@ -200,21 +219,10 @@ class ExcelEntryAppOOO:
             messagebox.showerror("Ошибка", f"Файл занят — закрой его в Excel:\n{self.excel_file}")
             return
 
+        # --- УНИВЕРСАЛЬНАЯ ЗАМЕНА В WORD ---
         if os.path.exists(self.word_template):
             doc = Document(self.word_template)
-            for p in doc.paragraphs:
-                for run in p.runs:
-                    for key, val in new_data.items():
-                        if f"{{{{{key}}}}}" in run.text:
-                            run.text = run.text.replace(f"{{{{{key}}}}}", val)
-            for table in doc.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        for p in cell.paragraphs:
-                            for run in p.runs:
-                                for key, val in new_data.items():
-                                    if f"{{{{{key}}}}}" in run.text:
-                                        run.text = run.text.replace(f"{{{{{key}}}}}", val)
+            replace_variables_in_doc(doc, new_data)
             word_output = self.excel_file.replace(".xlsx", "_документ.docx")
             doc.save(word_output)
             os.startfile(word_output)
@@ -222,6 +230,7 @@ class ExcelEntryAppOOO:
         for entry in self.entries.values():
             entry.delete(0, tk.END)
         self.update_nds()
+
 
 
 
