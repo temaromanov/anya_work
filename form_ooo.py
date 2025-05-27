@@ -21,12 +21,10 @@ def fio_to_rod_and_short(fio_nominative):
     fio_short = f"{fam} {name[0]}.{otch[0]}."
     return fio_rod, fio_short
 
-def rub_to_words(rub, kop):
+def rub_to_words(rub):
     rub = int(rub)
-    kop = int(kop)
     rub_text = num2words(rub, lang="ru")
-    kop_text = num2words(kop, lang="ru")
-    return f"{rub_text.capitalize()} рублей {kop_text} копеек"
+    return f"({rub_text})"
 
 # ---------- Универсальная функция замены по всему документу -------------
 def replace_variables_in_doc(doc, replacements):
@@ -197,7 +195,7 @@ class ExcelEntryAppOOO:
             kop = (kop + "00")[:2]
         new_data["Сумма_арендной_платы_руб"] = rub
         new_data["Сумма_арендной_платы_коп"] = kop
-        new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub, kop)
+        new_data["Сумма_арендной_платы_прописью"] = rub_to_words(rub)
 
         nds = round(summa_float * 5 / 105, 2)
         new_data["НДС"] = f"{nds:.2f}"
