@@ -66,7 +66,7 @@ class ExcelEntryAppUslugiOOO:
         self.word_template = "Шаблон_оказание_услуг_ООО.docx"  # Новый шаблон
 
         btn_back = ttk.Button(self.parent, text="← Назад к выбору", command=self.go_back)
-        label = ttk.Label(self.root, text="Договор оказания услуг (ООО)", font=("Segoe UI", 17, "bold"))
+        label = ttk.Label(parent, text="Договор оказания услуг (ООО)", font=("Segoe UI", 17, "bold"))
         label.pack(pady=(10, 10))
         btn_back.pack(anchor="nw", padx=10, pady=10)
 
