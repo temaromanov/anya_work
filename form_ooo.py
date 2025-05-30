@@ -95,6 +95,7 @@ class ExcelEntryAppOOO:
         self.fields_date = [
             "Дата_начала_аренды", "Дата_окончания_аренды", "Дата"
         ]
+
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Президент", "Директор"]
 
@@ -242,6 +243,8 @@ class ExcelEntryAppOOO:
             word_output = self.excel_file.replace(".xlsx", "_документ.docx")
             doc.save(word_output)
             os.startfile(word_output)
+        else:
+            messagebox.showerror("Нет шаблона", f"Word-шаблон не найден:\n{self.word_template}")
 
         for entry in self.entries.values():
             entry.delete(0, tk.END)
