@@ -58,20 +58,22 @@ def inline_replace_in_runs(runs, replacements):
         idx += run_len
 
 class ExcelEntryAppOOO:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Форма заполнения реквизитов (ООО)")
-        self.root.geometry("760x640")
+    def __init__(self, parent, go_back):
+        self.parent = parent
+        self.go_back_callback = go_back
         self.entries = {}
         self.excel_file = None
         self.word_template = "Шаблон_аренда_договор_ооо.docx"
+
+        btn_back = ttk.Button(self.parent, text="← Назад к выбору", command=self.go_back)
+        btn_back.pack(anchor="nw", padx=10, pady=10)
 
         style = ttk.Style()
         style.configure("TNotebook.Tab", font=("Segoe UI", 10, "bold"))
         style.configure("TLabel", font=("Segoe UI", 10))
         style.configure("TButton", font=("Segoe UI", 10))
 
-        notebook = ttk.Notebook(root)
+        notebook = ttk.Notebook(self.parent)
         notebook.pack(expand=True, fill='both', padx=12, pady=12)
 
         self.frames = {
@@ -128,12 +130,16 @@ class ExcelEntryAppOOO:
             else:
                 self.create_row(self.frames["Даты и номер"], field)
 
-        button_frame = ttk.Frame(root)
+        button_frame = ttk.Frame(self.parent)
         button_frame.pack(pady=15)
 
         ttk.Button(button_frame, text="📂 Выбрать Excel-файл", command=self.choose_file).pack(side=tk.LEFT, padx=8)
         ttk.Button(button_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=8)
         ttk.Button(button_frame, text="✅ Добавить и создать Word", command=self.save_and_generate_word).pack(side=tk.LEFT, padx=8)
+
+    def go_back(self):
+        self.parent.pack_forget()
+        self.go_back_callback()
 
     def create_row(self, parent, field, label_text=None):
         frame = ttk.Frame(parent)
@@ -249,4 +255,3 @@ class ExcelEntryAppOOO:
         for entry in self.entries.values():
             entry.delete(0, tk.END)
         self.update_nds()
-
