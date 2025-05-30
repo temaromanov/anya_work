@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from form_ooo import ExcelEntryAppOOO
 from form_ip import ExcelEntryAppIP
+from uslugi_ooo import ExcelEntryAppUslugiOOO
 
 class MainApp(tk.Tk):
     def __init__(self):
@@ -28,8 +29,19 @@ class MainApp(tk.Tk):
         ttk.Button(self.menu_frame, text="ООО", width=18, style="Menu.TButton", command=self.show_ooo).pack(pady=10)
         ttk.Button(self.menu_frame, text="ИП", width=18, style="Menu.TButton", command=self.show_ip).pack(pady=10)
 
+        # ---- Вот сюда вставляем кнопку Оказание услуг (ООО):
+        ttk.Button(
+            self.menu_frame,
+            text="Оказание услуг (ООО)",
+            width=22,
+            style="Menu.TButton",
+            command=self.show_uslugi_ooo
+        ).pack(pady=10)
+        # ---------------------------------------
+
         self.ooo_frame = None
         self.ip_frame = None
+        self.uslugi_ooo_frame = None
 
     def show_ooo(self):
         self.menu_frame.pack_forget()
@@ -37,6 +49,13 @@ class MainApp(tk.Tk):
             self.ooo_frame = ttk.Frame(self, padding=12)
             ExcelEntryAppOOO(self.ooo_frame, go_back=self.back_to_menu)
         self.ooo_frame.pack(expand=True, fill="both")
+
+    def show_uslugi_ooo(self):
+        self.menu_frame.pack_forget()
+        if self.uslugi_ooo_frame is None:
+            self.uslugi_ooo_frame = ttk.Frame(self, padding=12)
+            ExcelEntryAppUslugiOOO(self.uslugi_ooo_frame, go_back=self.back_to_menu)
+        self.uslugi_ooo_frame.pack(expand=True, fill="both")
 
     def show_ip(self):
         self.menu_frame.pack_forget()
@@ -48,7 +67,9 @@ class MainApp(tk.Tk):
     def back_to_menu(self):
         if self.ooo_frame: self.ooo_frame.pack_forget()
         if self.ip_frame: self.ip_frame.pack_forget()
+        if self.uslugi_ooo_frame: self.uslugi_ooo_frame.pack_forget()
         self.menu_frame.pack(expand=True, fill="both")
 
 if __name__ == "__main__":
     MainApp().mainloop()
+
