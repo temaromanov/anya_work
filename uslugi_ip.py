@@ -68,6 +68,8 @@ class ExcelEntryAppUslugiIP:
         self.word_template = "Шаблон_оказания_услуг_ИП.docx"
 
         btn_back = ttk.Button(self.root, text="← Назад к выбору", command=self.go_back)
+        label = ttk.Label(self.root, text="Договор оказания услуг (ИП)", font=("Segoe UI", 17, "bold"))
+        label.pack(pady=(10, 10))
         btn_back.pack(anchor="nw", padx=10, pady=10)
 
         style = ttk.Style()
