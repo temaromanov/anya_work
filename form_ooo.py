@@ -255,6 +255,12 @@ class ExcelEntryAppOOO:
             new_data["Дата_прописью"] = format_date_verbose(date_str)
         else:
             new_data["Дата_прописью"] = ""
+        # --- ДАТА ОКОНЧАНИЯ ПРОПИСЬЮ ---
+        date_end_str = new_data.get("Дата_окончания_аренды", "")
+        if date_end_str:
+            new_data["Дата_окончания_прописью"] = format_date_verbose(date_end_str)
+        else:
+            new_data["Дата_окончания_прописью"] = ""
 
         new_row = pd.DataFrame([new_data])
 
