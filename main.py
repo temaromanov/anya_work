@@ -4,6 +4,8 @@ from form_ooo import ExcelEntryAppOOO
 from form_ip import ExcelEntryAppIP
 from uslugi_ooo import ExcelEntryAppUslugiOOO
 from uslugi_ip import ExcelEntryAppUslugiIP
+from act_vozvrata_ooo import ExcelEntryAppActVozvrataOOO
+
 
 class MainApp(tk.Tk):
     def __init__(self):
@@ -31,6 +33,8 @@ class MainApp(tk.Tk):
         ttk.Button(self.menu_frame, text="ИП", width=18, style="Menu.TButton", command=self.show_ip).pack(pady=10)
         ttk.Button(self.menu_frame, text="Оказание услуг (ООО)", width=22, style="Menu.TButton", command=self.show_uslugi_ooo).pack(pady=10)
         ttk.Button(self.menu_frame, text="Оказание услуг (ИП)", width=22, style="Menu.TButton", command=self.show_uslugi_ip).pack(pady=10)
+        ttk.Button(self.menu_frame, text="Акт возврата (ООО)", width=24, style="Menu.TButton", command=self.show_act_vozvrata_ooo).pack(pady=10)
+
 
         self.ooo_frame = None
         self.ip_frame = None
@@ -65,12 +69,24 @@ class MainApp(tk.Tk):
             ExcelEntryAppUslugiIP(self.uslugi_ip_frame, go_back=self.back_to_menu)
         self.uslugi_ip_frame.pack(expand=True, fill="both")
 
+    def show_act_vozvrata_ooo(self):
+        self.menu_frame.pack_forget()
+        if not hasattr(self, 'act_vozvrata_frame') or self.act_vozvrata_frame is None:
+            self.act_vozvrata_frame = ttk.Frame(self, padding=12)
+        ExcelEntryAppActVozvrataOOO(self.act_vozvrata_frame, go_back=self.back_to_menu)
+        self.act_vozvrata_frame.pack(expand=True, fill="both")
+
+
+
     def back_to_menu(self):
         if self.ooo_frame: self.ooo_frame.pack_forget()
         if self.ip_frame: self.ip_frame.pack_forget()
         if self.uslugi_ooo_frame: self.uslugi_ooo_frame.pack_forget()
         if self.uslugi_ip_frame: self.uslugi_ip_frame.pack_forget()
         self.menu_frame.pack(expand=True, fill="both")
+        if hasattr(self, 'act_vozvrata_frame') and self.act_vozvrata_frame:
+            self.act_vozvrata_frame.pack_forget()
+
 
 if __name__ == "__main__":
     MainApp().mainloop()
