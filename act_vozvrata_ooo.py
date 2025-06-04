@@ -23,12 +23,20 @@ def fio_to_rod_and_short(fio_nominative):
     parts = fio_nominative.strip().split()
     if len(parts) < 3:
         return fio_nominative, fio_nominative
+
     fam, name, otch = parts
-    fam_rod = morph.parse(fam)[0].inflect({'gent'}).word.title()
-    name_rod = morph.parse(name)[0].inflect({'gent'}).word.title()
-    otch_rod = morph.parse(otch)[0].inflect({'gent'}).word.title()
+
+    fam_parsed = morph.parse(fam)[0].inflect({'gent'})
+    name_parsed = morph.parse(name)[0].inflect({'gent'})
+    otch_parsed = morph.parse(otch)[0].inflect({'gent'})
+
+    fam_rod = fam_parsed.word.title() if fam_parsed else fam
+    name_rod = name_parsed.word.title() if name_parsed else name
+    otch_rod = otch_parsed.word.title() if otch_parsed else otch
+
     fio_rod = f"{fam_rod} {name_rod} {otch_rod}"
     fio_short = f"{fam} {name[0]}.{otch[0]}."
+
     return fio_rod, fio_short
 
 def format_date_verbose(date_str):
@@ -97,8 +105,6 @@ class ExcelEntryAppActVozvrataOOO:
                 self.create_row(self.frame, field, "ФИО")
             elif field == "Должность":
                 self.create_combobox(self.frame, field, person_options)
-            elif field == "Банк":
-                self.create_combobox(self.frame, field, bank_options)
             elif "Дата" in field:
                 self.create_dateentry(self.frame, field)
             else:

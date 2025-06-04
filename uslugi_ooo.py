@@ -23,12 +23,20 @@ def fio_to_rod_and_short(fio_nominative):
     parts = fio_nominative.strip().split()
     if len(parts) < 3:
         return fio_nominative, fio_nominative
+
     fam, name, otch = parts
-    fam_rod = morph.parse(fam)[0].inflect({'gent'}).word.title()
-    name_rod = morph.parse(name)[0].inflect({'gent'}).word.title()
-    otch_rod = morph.parse(otch)[0].inflect({'gent'}).word.title()
+
+    fam_parsed = morph.parse(fam)[0].inflect({'gent'})
+    name_parsed = morph.parse(name)[0].inflect({'gent'})
+    otch_parsed = morph.parse(otch)[0].inflect({'gent'})
+
+    fam_rod = fam_parsed.word.title() if fam_parsed else fam
+    name_rod = name_parsed.word.title() if name_parsed else name
+    otch_rod = otch_parsed.word.title() if otch_parsed else otch
+
     fio_rod = f"{fam_rod} {name_rod} {otch_rod}"
     fio_short = f"{fam} {name[0]}.{otch[0]}."
+
     return fio_rod, fio_short
 
 def rub_to_words(rub):
@@ -128,9 +136,7 @@ class ExcelEntryAppUslugiOOO:
                 self.create_row(self.frames["Основное"], field)
 
         for field in self.fields_bank:
-            if field == "Банк":
-                self.create_combobox(self.frames["Банк и документы"], field, bank_options)
-            elif field == "Контактная_персона":
+            if field == "Контактная_персона":
                 self.create_combobox(self.frames["Банк и документы"], field, person_options)
             else:
                 self.create_row(self.frames["Банк и документы"], field)
@@ -196,9 +202,11 @@ class ExcelEntryAppUslugiOOO:
         try:
             summa = float(self.entries["Сумма_арендной_платы"].get().replace(",", "."))
             nds = round(summa * 5 / 105, 2)
-            self.nds_label.config(text=f"НДС (5%): {nds:.2f}")
+            if self.nds_label:
+                self.nds_label.config(text=f"НДС (5%): {nds:.2f}")
         except Exception:
-            self.nds_label.config(text="НДС (5%): 0.00")
+            if self.nds_label:
+                self.nds_label.config(text="НДС (5%): 0.00")
 
     def save_and_generate_word(self):
         if not self.excel_file:
