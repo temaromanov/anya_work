@@ -29,8 +29,8 @@ class MainApp(tk.Tk):
         label = ttk.Label(self.menu_frame, text="Выберите тип организации", font=("Segoe UI", 17, "bold"))
         label.pack(pady=(38,18))
 
-        ttk.Button(self.menu_frame, text="ООО", width=22, style="Menu.TButton", command=self.show_ooo).pack(pady=8)
-        ttk.Button(self.menu_frame, text="ИП", width=22, style="Menu.TButton", command=self.show_ip).pack(pady=8)
+        ttk.Button(self.menu_frame, text="Договор аренды (ООО)", width=22, style="Menu.TButton", command=self.show_ooo).pack(pady=8)
+        ttk.Button(self.menu_frame, text="Договор аренды (ИП)", width=22, style="Menu.TButton", command=self.show_ip).pack(pady=8)
         ttk.Button(self.menu_frame, text="Оказание услуг (ООО)", width=22, style="Menu.TButton", command=self.show_uslugi_ooo).pack(pady=8)
         ttk.Button(self.menu_frame, text="Оказание услуг (ИП)", width=22, style="Menu.TButton", command=self.show_uslugi_ip).pack(pady=8)
         ttk.Button(self.menu_frame, text="Акт возврата (ООО)", width=22, style="Menu.TButton", command=self.show_act_vozvrata_ooo).pack(pady=8)
@@ -42,6 +42,7 @@ class MainApp(tk.Tk):
         self.uslugi_ip_frame = None
         self.act_vozvrata_frame = None
         self.peredatoch_act_frame = None
+        
 
     def show_ooo(self):
         self.menu_frame.pack_forget()

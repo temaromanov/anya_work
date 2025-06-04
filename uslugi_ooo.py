@@ -8,6 +8,15 @@ import pymorphy3
 from num2words import num2words
 from datetime import datetime
 
+def copy_paste_fix(e):
+        if e.state & 0x4:  # Ctrl зажат
+            if e.keycode == 86:  # V
+                e.widget.event_generate('<<Paste>>')
+            elif e.keycode == 67:  # C
+                e.widget.event_generate('<<Copy>>')
+            elif e.keycode == 88:  # X
+                e.widget.event_generate('<<Cut>>')
+
 morph = pymorphy3.MorphAnalyzer()
 
 def fio_to_rod_and_short(fio_nominative):
@@ -138,6 +147,9 @@ class ExcelEntryAppUslugiOOO:
         ttk.Button(button_frame, text="📂 Выбрать Excel-файл", command=self.choose_file).pack(side=tk.LEFT, padx=8)
         ttk.Button(button_frame, text="💾 Сохранить как...", command=self.save_as).pack(side=tk.LEFT, padx=8)
         ttk.Button(button_frame, text="✅ Добавить и создать Word", command=self.save_and_generate_word).pack(side=tk.LEFT, padx=8)
+
+        # Обрабатываем Ctrl+C/V/X даже при русской раскладке
+        self.parent.bind_all("<Key>", copy_paste_fix)
 
     def go_back(self):
         self.parent.pack_forget()
