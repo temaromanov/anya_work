@@ -49,13 +49,21 @@ def format_date_verbose(date_str):
         return date_str
 
 def replace_variables_in_doc(doc, replacements):
+    def replace_in_paragraph(paragraph):
+        for key, value in replacements.items():
+            if f"{{{{{key}}}}}" in paragraph.text:
+                inline_replace = paragraph.text.replace(f"{{{{{key}}}}}", str(value))
+                paragraph.clear()
+                paragraph.add_run(inline_replace)
+
     for paragraph in doc.paragraphs:
-        inline_replace_in_runs(paragraph.runs, replacements)
+        replace_in_paragraph(paragraph)
+
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
-                    inline_replace_in_runs(paragraph.runs, replacements)
+                    replace_in_paragraph(paragraph)
 
 def inline_replace_in_runs(runs, replacements):
     full_text = "".join([run.text for run in runs])
