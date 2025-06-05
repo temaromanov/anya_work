@@ -76,14 +76,18 @@ class MainApp(tk.Tk):
         self.menu_frame.pack_forget()
         if self.act_vozvrata_frame is None:
             self.act_vozvrata_frame = ttk.Frame(self, padding=12)
-        ExcelEntryAppActVozvrataOOO(self.act_vozvrata_frame, go_back=self.back_to_menu)
+            ExcelEntryAppActVozvrataOOO(
+                self.act_vozvrata_frame, go_back=self.back_to_menu
+            )
         self.act_vozvrata_frame.pack(expand=True, fill="both")
 
     def show_peredatoch_act_ooo(self):
         self.menu_frame.pack_forget()
         if self.peredatoch_act_frame is None:
             self.peredatoch_act_frame = ttk.Frame(self, padding=12)
-        ExcelPeredActAppOOO(self.peredatoch_act_frame, go_back=self.back_to_menu)
+            ExcelPeredActAppOOO(
+                self.peredatoch_act_frame, go_back=self.back_to_menu
+            )
         self.peredatoch_act_frame.pack(expand=True, fill="both")
 
     def back_to_menu(self):
