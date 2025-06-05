@@ -89,7 +89,7 @@ class ExcelEntryAppIP:
         self.go_back_callback = go_back
         self.entries = {}
         self.excel_file = None
-        self.word_template = "Шаблон_договор_аренда_ИП.docx"
+        self.word_template = "Шаблон_аренда_договор_ИП.docx"
 
         btn_back = ttk.Button(self.parent, text="← Назад к выбору", command=self.go_back)
         label = ttk.Label(parent, text="Договор аренды (ИП)", font=("Segoe UI", 17, "bold"))
