@@ -7,6 +7,7 @@ from docx import Document
 import pymorphy3
 from num2words import num2words
 from datetime import datetime
+from docx.shared import Pt
 
 def copy_paste_fix(e):
         if e.state & 0x4:  # Ctrl зажат
@@ -83,6 +84,7 @@ def inline_replace_in_runs(runs, replacements):
         run.text = full_text[idx:idx+run_len]
         idx += run_len
 
+
 class ExcelPeredActAppOOO:
     def __init__(self, parent, go_back):
         self.parent = parent
@@ -117,10 +119,10 @@ class ExcelPeredActAppOOO:
             "Название_организации",
             "Должность",
             "ФИО_им",
-            "Юридический_адрес", "Фактический_адрес",
             "Сумма_арендной_платы"
         ]
         self.fields_bank = [
+            "Юридический_адрес", "Фактический_адрес",
             "ИНН", "КПП", "ОКПО", "ОГРН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [

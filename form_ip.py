@@ -62,6 +62,7 @@ def replace_variables_in_doc(doc, replacements):
                 inline_replace = paragraph.text.replace(f"{{{{{key}}}}}", str(value))
                 paragraph.clear()
                 paragraph.add_run(inline_replace)
+                
 
     for paragraph in doc.paragraphs:
         replace_in_paragraph(paragraph)
@@ -113,14 +114,14 @@ class ExcelEntryAppIP:
             notebook.add(frame, text=name)
 
         self.fields_main = [
-            "ФИО_им", "ОГРНИП", "Номер_договора",
+            "ФИО_им", "ОГРНИП", 
             "Мероприятие", "Адрес_мероприятия", "Сумма_арендной_платы"
         ]
         self.fields_bank = [
-            "ИНН", "Юридический_адрес", "Расч_счет", "Банк", "БИК", "к_счет"
+            "Юридический_адрес", "ИНН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
-            "Дата"
+            "Номер_договора", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
         person_options = ["Генеральный директор", "Президент", "Директор"]

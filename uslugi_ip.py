@@ -7,6 +7,7 @@ from docx import Document
 import pymorphy3
 from num2words import num2words
 from datetime import datetime
+from docx.shared import Pt
 
 def copy_paste_fix(e):
         if e.state & 0x4:  # Ctrl зажат
@@ -81,6 +82,7 @@ def inline_replace_in_runs(runs, replacements):
         run_len = len(run.text)
         run.text = full_text[idx:idx+run_len]
         idx += run_len
+        
 
 class ExcelEntryAppUslugiIP:
     def __init__(self, root, go_back=None):
@@ -115,14 +117,14 @@ class ExcelEntryAppUslugiIP:
             notebook.add(frame, text=name)
 
         self.fields_main = [
-            "ФИО_им", "ОГРНИП", "Номер_договора", "Стоимость_услуг",
+            "ФИО_им", "ОГРНИП",
             "Мероприятие", "Адрес_мероприятия", "Сумма_арендной_платы"
         ]
         self.fields_bank = [
-            "ИНН", "Юридический_адрес", "Расч_счет", "Банк", "БИК", "к_счет"
+            "Юридический_адрес", "ИНН", "Расч_счет", "Банк", "БИК", "к_счет"
         ]
         self.fields_date = [
-            "Дата"
+            "Номер_договора", "Дата"
         ]
         bank_options = ["ПАО СБЕРБАНК", "ВТБ", "Газпромбанк", "Альфа-Банк", "Тинькофф"]
 
