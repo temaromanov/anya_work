@@ -92,7 +92,7 @@ class ExcelPeredActAppOOO:
         self.word_template = "Шаблон_передаточный_акт_ООО.docx"
 
         btn_back = ttk.Button(self.parent, text="← Назад к выбору", command=self.go_back)
-        label = ttk.Label(parent, text="Договор аренды (ООО)", font=("Segoe UI", 17, "bold"))
+        label = ttk.Label(parent, text="Передаточный акт (ООО)", font=("Segoe UI", 17, "bold"))
         label.pack(pady=(10, 10))
         btn_back.pack(anchor="nw", padx=10, pady=10)
 
@@ -218,6 +218,7 @@ class ExcelPeredActAppOOO:
                 self.nds_label.config(text="НДС (5%): 0.00")
 
     def save_and_generate_word(self):
+        
         if not self.excel_file:
             messagebox.showwarning("Файл не выбран", "Пожалуйста, выберите или создайте Excel-файл перед сохранением.")
             return
@@ -228,6 +229,21 @@ class ExcelPeredActAppOOO:
         new_data = {k: v.get() for k, v in self.entries.items()}
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
+
+        position = new_data.get("Должность", "")
+        if position:
+            words = position.strip().split()
+            inflected_words = []
+            for word in words:
+                parsed = morph.parse(word)[0]
+                inflected = parsed.inflect({'gent'})
+                inflected_words.append(inflected.word if inflected else word)
+            if inflected_words:
+                inflected_words[0] = inflected_words[0].capitalize()
+            new_data["Должность_род"] = " ".join(inflected_words)
+        else:
+            new_data["Должность_род"] = ""
+
 
         summa_str = new_data.get("Сумма_арендной_платы", "0").replace(",", ".")
         if summa_str.strip() == "":
@@ -283,7 +299,7 @@ class ExcelPeredActAppOOO:
         if os.path.exists(self.word_template):
             doc = Document(self.word_template)
             replace_variables_in_doc(doc, new_data)
-            word_output = self.excel_file.replace(".xlsx", "_документ.docx")
+            word_output = self.excel_file.replace(".xlsx", f"_документ_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx")
             doc.save(word_output)
             os.startfile(word_output)
         else:

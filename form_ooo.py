@@ -229,6 +229,20 @@ class ExcelEntryAppOOO:
         new_data["Полное_имя_род_падеж"] = fio_rod
         new_data["Сокрщ_имя_дир"] = fio_short
 
+        position = new_data.get("Должность", "")
+        if position:
+            words = position.strip().split()
+            inflected_words = []
+            for word in words:
+                parsed = morph.parse(word)[0]
+                inflected = parsed.inflect({'gent'})
+                inflected_words.append(inflected.word if inflected else word)
+            if inflected_words:
+                inflected_words[0] = inflected_words[0].capitalize()
+            new_data["Должность_род"] = " ".join(inflected_words)
+        else:
+            new_data["Должность_род"] = ""
+
         summa_str = new_data.get("Сумма_арендной_платы", "0").replace(",", ".")
         if summa_str.strip() == "":
             summa_str = "0"
