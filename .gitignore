@@ -1,6 +1,18 @@
-*.xlsx
-README.md
-*.pyc
-*.docx
-.venv/
+# Python
 __pycache__/
+*.pyc
+*.pyo
+
+# Env
+.venv/
+env/
+venv/
+
+# Build
+build/
+dist/
+*.exe
+
+# IDE
+.vscode/
+.idea/
