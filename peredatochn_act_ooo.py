@@ -7,7 +7,6 @@ from docx import Document
 import pymorphy3
 from num2words import num2words
 from datetime import datetime
-from docx.shared import Pt
 
 def copy_paste_fix(e):
         if e.state & 0x4:  # Ctrl зажат
